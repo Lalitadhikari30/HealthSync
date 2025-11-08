@@ -1,434 +1,4 @@
-// import { useState, useEffect } from "react";
-// import { useAuth } from "../../contexts/AuthContext";
-// import { db } from "../../lib/firebase";
-// import {
-//   collection,
-//   getDocs,
-//   query,
-//   where,
-//   orderBy,
-//   limit,
-//   onSnapshot,
-// } from "firebase/firestore";
-// import {
-//   Calendar,
-//   FileText,
-//   Activity,
-//   Heart,
-//   LogOut,
-//   Upload,
-//   Stethoscope,
-//   Clock,
-//   AlertCircle,
-// } from "lucide-react";
-// import { useNavigate } from "../../hooks/useNavigate";
-
-// export default function PatientDashboard() {
-//   const { user, profile, logout } = useAuth();
-//   const navigate = useNavigate();
-
-//   const [activeTab, setActiveTab] = useState("overview");
-//   const [appointments, setAppointments] = useState<any[]>([]);
-//   const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
-//   const [diagnoses, setDiagnoses] = useState<any[]>([]);
-//   const [loading, setLoading] = useState(true);
-//   const [patientId, setPatientId] = useState<string | null>(null);
-
-// useEffect(() => {
-//   if (!user) return;
-
-//   document.title = `Dashboard - ${profile?.full_name || "Patient"}`;
-  
-//   // ✅ Directly use user's UID as patient_id
-//   const appointmentsQuery = query(
-//     collection(db, "appointments"),
-//     where("patient_id", "==", user.uid),
-//     orderBy("createdAt", "desc")
-//   );
-
-//   const unsubscribeAppointments = onSnapshot(appointmentsQuery, (snap) => {
-//     setAppointments(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-//     setLoading(false);
-//   });
-
-//   // Optionally load records & diagnoses
-//   const recordsQuery = query(
-//     collection(db, "medical_records"),
-//     where("patient_id", "==", user.uid),
-//     orderBy("createdAt", "desc"),
-//     limit(5)
-//   );
-//   const diagnosesQuery = query(
-//     collection(db, "diagnoses"),
-//     where("patient_id", "==", user.uid),
-//     orderBy("createdAt", "desc"),
-//     limit(3)
-//   );
-
-//   Promise.all([getDocs(recordsQuery), getDocs(diagnosesQuery)]).then(
-//     ([rSnap, dSnap]) => {
-//       setMedicalRecords(rSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-//       setDiagnoses(dSnap.docs.map((d) => ({ id: d.id, ...d.data() })));
-//     }
-//   );
-
-//   return () => unsubscribeAppointments();
-// }, [user]);
-
-
-//   const handleLogout = async () => {
-//     await logout();
-//     navigate("/");
-//   };
-
-//   if (loading) {
-//     return (
-//       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-//         <div className="text-center">
-//           <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-//           <p className="text-gray-600">Loading your dashboard...</p>
-//         </div>
-//       </div>
-//     );
-//   }
-
-//   return (
-//     <div className="min-h-screen bg-gray-50">
-//       {/* Header */}
-//       <header className="bg-white shadow-sm">
-//         <div className="container mx-auto px-6 py-4">
-//           <div className="flex items-center justify-between">
-//             <div className="flex items-center gap-3">
-//               <div className="bg-gradient-to-br from-blue-600 to-cyan-500 p-2 rounded-xl">
-//                 <Heart className="w-6 h-6 text-white" />
-//               </div>
-//               <div>
-//                 <h1 className="text-xl font-bold text-gray-800">HealthSync</h1>
-//                 <p className="text-sm text-gray-600">Patient Portal</p>
-//               </div>
-//             </div>
-//             <div className="flex items-center gap-4">
-//               <div className="text-right">
-//                 <p className="font-semibold text-gray-800">
-//                   {profile?.full_name}
-//                 </p>
-//                 <p className="text-sm text-gray-600">{profile?.email}</p>
-//               </div>
-//               <button
-//                 onClick={handleLogout}
-//                 className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-//               >
-//                 <LogOut className="w-5 h-5" />
-//               </button>
-//             </div>
-//           </div>
-//         </div>
-//       </header>
-
-//       {/* Body */}
-//       <div className="container mx-auto px-6 py-8">
-//         <div className="mb-8">
-//           <h2 className="text-3xl font-bold text-gray-800 mb-2">
-//             Welcome back, {profile?.full_name?.split(" ")[0]}!
-//           </h2>
-//           <p className="text-gray-600">Here's your health overview</p>
-//         </div>
-
-//         {/* Summary Cards */}
-//         <div className="grid md:grid-cols-4 gap-6 mb-8">
-//           <SummaryCard
-//             icon={Calendar}
-//             color="blue"
-//             count={appointments.length}
-//             label="Appointments"
-//           />
-//           <SummaryCard
-//             icon={FileText}
-//             color="cyan"
-//             count={medicalRecords.length}
-//             label="Records"
-//           />
-//           <SummaryCard
-//             icon={Activity}
-//             color="teal"
-//             count={diagnoses.length}
-//             label="Diagnoses"
-//           />
-//           <button
-//             onClick={() => navigate("/patient/ai-diagnosis")}
-//             className="bg-gradient-to-r from-blue-600 to-cyan-500 text-white rounded-xl p-6 hover:shadow-lg transform hover:scale-105 transition-all"
-//           >
-//             <Stethoscope className="w-8 h-8 mb-2" />
-//             <p className="font-semibold">AI Diagnosis</p>
-//             <p className="text-sm opacity-90">Check symptoms</p>
-//           </button>
-//         </div>
-
-//         {/* Tabs */}
-//         <div className="bg-white rounded-xl shadow-sm mb-6">
-//           <div className="border-b border-gray-200">
-//             <div className="flex gap-8 px-6">
-//               <Tab label="Overview" value="overview" active={activeTab} onClick={setActiveTab} />
-//               <Tab label="Appointments" value="appointments" active={activeTab} onClick={setActiveTab} />
-//               <Tab label="Medical Records" value="records" active={activeTab} onClick={setActiveTab} />
-//             </div>
-//           </div>
-
-//           <div className="p-6">
-//             {activeTab === "overview" && (
-//               <OverviewSection
-//                 appointments={appointments}
-//                 diagnoses={diagnoses}
-//                 navigate={navigate}
-//               />
-//             )}
-//             {activeTab === "appointments" && (
-//               <AppointmentsSection appointments={appointments} navigate={navigate} />
-//             )}
-//             {activeTab === "records" && (
-//               <RecordsSection medicalRecords={medicalRecords} />
-//             )}
-//           </div>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// /* ----------------- Subcomponents ----------------- */
-
-// function SummaryCard({ icon: Icon, color, count, label }: any) {
-//   const colors: any = {
-//     blue: "bg-blue-100 text-blue-600",
-//     cyan: "bg-cyan-100 text-cyan-600",
-//     teal: "bg-teal-100 text-teal-600",
-//   };
-//   return (
-//     <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
-//       <div className="flex items-center gap-4">
-//         <div className={`w-12 h-12 ${colors[color]} rounded-lg flex items-center justify-center`}>
-//           <Icon className="w-6 h-6" />
-//         </div>
-//         <div>
-//           <p className="text-2xl font-bold text-gray-800">{count}</p>
-//           <p className="text-sm text-gray-600">{label}</p>
-//         </div>
-//       </div>
-//     </div>
-//   );
-// }
-
-// function Tab({ label, value, active, onClick }: any) {
-//   return (
-//     <button
-//       onClick={() => onClick(value)}
-//       className={`py-4 border-b-2 font-medium transition-colors ${
-//         active === value
-//           ? "border-blue-600 text-blue-600"
-//           : "border-transparent text-gray-600 hover:text-gray-800"
-//       }`}
-//     >
-//       {label}
-//     </button>
-//   );
-// }
-
-// function OverviewSection({ appointments, diagnoses, navigate }: any) {
-//   const upcoming = appointments.filter((a: any) => a.status === "scheduled");
-//   return (
-//     <div className="space-y-6">
-//       {/* Appointments */}
-//       <div>
-//         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-//           Upcoming Appointments
-//         </h3>
-//         {upcoming.length > 0 ? (
-//           <div className="space-y-3">
-//             {upcoming.slice(0, 3).map((a: any) => (
-//               <div
-//                 key={a.id}
-//                 className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-//               >
-//                 <div className="flex items-center gap-4">
-//                   <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-//                     <Calendar className="w-6 h-6 text-blue-600" />
-//                   </div>
-//                   <div>
-//                     <p className="font-semibold text-gray-800">{a.reason || "Consultation"}</p>
-//                     <div className="flex items-center gap-4 text-sm text-gray-600">
-//                       <span className="flex items-center gap-1">
-//                         <Calendar className="w-4 h-4" />
-//                         {new Date(a.appointment_date).toLocaleDateString()}
-//                       </span>
-//                       <span className="flex items-center gap-1">
-//                         <Clock className="w-4 h-4" />
-//                         {a.appointment_time}
-//                       </span>
-//                     </div>
-//                   </div>
-//                 </div>
-//                 <span className="px-3 py-1 bg-blue-100 text-blue-600 rounded-full text-sm font-medium">
-//                   Scheduled
-//                 </span>
-//               </div>
-//             ))}
-//           </div>
-//         ) : (
-//           <div className="text-center py-8 text-gray-500">
-//             <Calendar className="w-12 h-12 mx-auto mb-2 opacity-50" />
-//             <p>No upcoming appointments</p>
-//             <button
-//               onClick={() => navigate("/patient/book-appointment")}
-//               className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-//             >
-//               Book Appointment
-//             </button>
-//           </div>
-//         )}
-//       </div>
-
-//       {/* Diagnoses */}
-//       <div>
-//         <h3 className="text-lg font-semibold text-gray-800 mb-4">
-//           Recent Diagnoses
-//         </h3>
-//         {diagnoses.length > 0 ? (
-//           <div className="space-y-3">
-//             {diagnoses.slice(0, 2).map((d: any) => (
-//               <div key={d.id} className="p-4 bg-gray-50 rounded-lg">
-//                 <div className="flex items-center gap-2 mb-2">
-//                   <Activity className="w-5 h-5 text-teal-600" />
-//                   <span className="font-semibold text-gray-800">
-//                     {new Date(d.createdAt?.toDate?.() || d.createdAt).toLocaleDateString()}
-//                   </span>
-//                 </div>
-//                 <p className="text-sm text-gray-600 mb-2">
-//                   Symptoms: {d.symptoms?.join(", ")}
-//                 </p>
-//                 {d.ai_prediction && (
-//                   <div className="text-sm">
-//                     <p className="font-medium text-gray-700">AI Prediction:</p>
-//                     {d.ai_prediction.slice(0, 2).map((p: any, idx: number) => (
-//                       <p key={idx} className="text-gray-600">
-//                         • {p.disease} ({(p.confidence * 100).toFixed(1)}%)
-//                       </p>
-//                     ))}
-//                   </div>
-//                 )}
-//               </div>
-//             ))}
-//           </div>
-//         ) : (
-//           <div className="text-center py-8 text-gray-500">
-//             <Activity className="w-12 h-12 mx-auto mb-2 opacity-50" />
-//             <p>No diagnoses yet</p>
-//           </div>
-//         )}
-//       </div>
-//     </div>
-//   );
-// }
-
-// function AppointmentsSection({ appointments, navigate }: any) {
-//   return (
-//     <div>
-//       <div className="flex items-center justify-between mb-6">
-//         <h3 className="text-lg font-semibold text-gray-800">All Appointments</h3>
-//         <button
-//           onClick={() => navigate("/patient/book-appointment")}
-//           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-//         >
-//           Book New
-//         </button>
-//       </div>
-//       {appointments.length > 0 ? (
-//         <div className="space-y-3">
-//           {appointments.map((a: any) => (
-//             <div
-//               key={a.id}
-//               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
-//             >
-//               <div className="flex items-center gap-4">
-//                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-//                   <Calendar className="w-6 h-6 text-blue-600" />
-//                 </div>
-//                 <div>
-//                   <p className="font-semibold text-gray-800">{a.reason || "Consultation"}</p>
-//                   <div className="flex items-center gap-4 text-sm text-gray-600">
-//                     <span>{new Date(a.appointment_date).toLocaleDateString()}</span>
-//                     <span>{a.appointment_time}</span>
-//                   </div>
-//                 </div>
-//               </div>
-//               <span
-//                 className={`px-3 py-1 rounded-full text-sm font-medium ${
-//                   a.status === "scheduled"
-//                     ? "bg-blue-100 text-blue-600"
-//                     : a.status === "completed"
-//                     ? "bg-green-100 text-green-600"
-//                     : "bg-red-100 text-red-600"
-//                 }`}
-//               >
-//                 {a.status.charAt(0).toUpperCase() + a.status.slice(1)}
-//               </span>
-//             </div>
-//           ))}
-//         </div>
-//       ) : (
-//         <div className="text-center py-12 text-gray-500">
-//           <AlertCircle className="w-12 h-12 mx-auto mb-2 opacity-50" />
-//           <p>No appointments found</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-// function RecordsSection({ medicalRecords }: any) {
-//   return (
-//     <div>
-//       <div className="flex items-center justify-between mb-6">
-//         <h3 className="text-lg font-semibold text-gray-800">Medical Records</h3>
-//         <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2">
-//           <Upload className="w-4 h-4" />
-//           Upload
-//         </button>
-//       </div>
-//       {medicalRecords.length > 0 ? (
-//         <div className="space-y-3">
-//           {medicalRecords.map((r: any) => (
-//             <div
-//               key={r.id}
-//               className="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-//             >
-//               <div className="flex items-center gap-4">
-//                 <div className="w-12 h-12 bg-cyan-100 rounded-lg flex items-center justify-center">
-//                   <FileText className="w-6 h-6 text-cyan-600" />
-//                 </div>
-//                 <div>
-//                   <p className="font-semibold text-gray-800">{r.title}</p>
-//                   <div className="flex items-center gap-4 text-sm text-gray-600">
-//                     <span>{r.record_type}</span>
-//                     <span>
-//                       {new Date(r.createdAt?.toDate?.() || r.createdAt).toLocaleDateString()}
-//                     </span>
-//                   </div>
-//                 </div>
-//               </div>
-//             </div>
-//           ))}
-//         </div>
-//       ) : (
-//         <div className="text-center py-12 text-gray-500">
-//           <FileText className="w-12 h-12 mx-auto mb-2 opacity-50" />
-//           <p>No medical records found</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
-
+import DashboardLayout from "../../components/layout/DashboardLayout";
 import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { db } from "../../lib/firebase";
@@ -447,8 +17,6 @@ import {
   Calendar,
   FileText,
   Activity,
-  Heart,
-  LogOut,
   Upload,
   Stethoscope,
   Clock,
@@ -459,7 +27,7 @@ import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useNavigate } from "../../hooks/useNavigate";
 
 export default function PatientDashboard() {
-  const { user, profile, logout } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("overview");
@@ -473,7 +41,7 @@ export default function PatientDashboard() {
 
     document.title = `Dashboard - ${profile?.full_name || "Patient"}`;
 
-    // Real-time listener for appointments
+    // ✅ Real-time listener for appointments
     const appointmentsQuery = query(
       collection(db, "appointments"),
       where("patient_id", "==", user.uid),
@@ -485,13 +53,14 @@ export default function PatientDashboard() {
       setLoading(false);
     });
 
-    // Fetch medical records and diagnoses
+    // ✅ Fetch medical records & diagnoses
     const recordsQuery = query(
       collection(db, "medical_records"),
       where("patient_id", "==", user.uid),
       orderBy("createdAt", "desc"),
       limit(5)
     );
+
     const diagnosesQuery = query(
       collection(db, "diagnoses"),
       where("patient_id", "==", user.uid),
@@ -509,11 +78,6 @@ export default function PatientDashboard() {
     return () => unsubscribeAppointments();
   }, [user]);
 
-  const handleLogout = async () => {
-    await logout();
-    navigate("/");
-  };
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -526,40 +90,9 @@ export default function PatientDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-600 to-cyan-500 p-2 rounded-xl">
-                <Heart className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-gray-800">HealthSync</h1>
-                <p className="text-sm text-gray-600">Patient Portal</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-4">
-              <div className="text-right">
-                <p className="font-semibold text-gray-800">
-                  {profile?.full_name}
-                </p>
-                <p className="text-sm text-gray-600">{profile?.email}</p>
-              </div>
-              <button
-                onClick={handleLogout}
-                className="p-2 text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-              >
-                <LogOut className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* Body */}
-      <div className="container mx-auto px-6 py-8">
+    <DashboardLayout>
+      <div>
+        {/* Welcome Section */}
         <div className="mb-8">
           <h2 className="text-3xl font-bold text-gray-800 mb-2">
             Welcome back, {profile?.full_name?.split(" ")[0]}!
@@ -601,24 +134,9 @@ export default function PatientDashboard() {
         <div className="bg-white rounded-xl shadow-sm mb-6">
           <div className="border-b border-gray-200">
             <div className="flex gap-8 px-6">
-              <Tab
-                label="Overview"
-                value="overview"
-                active={activeTab}
-                onClick={setActiveTab}
-              />
-              <Tab
-                label="Appointments"
-                value="appointments"
-                active={activeTab}
-                onClick={setActiveTab}
-              />
-              <Tab
-                label="Medical Records"
-                value="records"
-                active={activeTab}
-                onClick={setActiveTab}
-              />
+              <Tab label="Overview" value="overview" active={activeTab} onClick={setActiveTab} />
+              <Tab label="Appointments" value="appointments" active={activeTab} onClick={setActiveTab} />
+              <Tab label="Medical Records" value="records" active={activeTab} onClick={setActiveTab} />
             </div>
           </div>
 
@@ -631,22 +149,17 @@ export default function PatientDashboard() {
               />
             )}
             {activeTab === "appointments" && (
-              <AppointmentsSection
-                appointments={appointments}
-                navigate={navigate}
-              />
+              <AppointmentsSection appointments={appointments} navigate={navigate} />
             )}
-            {activeTab === "records" && (
-              <RecordsSection medicalRecords={medicalRecords} />
-            )}
+            {activeTab === "records" && <RecordsSection medicalRecords={medicalRecords} />}
           </div>
         </div>
       </div>
-    </div>
+    </DashboardLayout>
   );
 }
 
-/* ----------------- Subcomponents ----------------- */
+/* ---------------- Subcomponents ---------------- */
 
 function SummaryCard({ icon: Icon, color, count, label }: any) {
   const colors: any = {
@@ -657,9 +170,7 @@ function SummaryCard({ icon: Icon, color, count, label }: any) {
   return (
     <div className="bg-white rounded-xl shadow-sm p-6 hover:shadow-md transition-shadow">
       <div className="flex items-center gap-4">
-        <div
-          className={`w-12 h-12 ${colors[color]} rounded-lg flex items-center justify-center`}
-        >
+        <div className={`w-12 h-12 ${colors[color]} rounded-lg flex items-center justify-center`}>
           <Icon className="w-6 h-6" />
         </div>
         <div>
@@ -686,7 +197,7 @@ function Tab({ label, value, active, onClick }: any) {
   );
 }
 
-/* ----------------- Overview Section ----------------- */
+/* ---------------- Overview Section ---------------- */
 function OverviewSection({ appointments, diagnoses, navigate }: any) {
   const upcoming = appointments.filter((a: any) => a.status === "scheduled");
   return (
@@ -755,9 +266,7 @@ function OverviewSection({ appointments, diagnoses, navigate }: any) {
                 <div className="flex items-center gap-2 mb-2">
                   <Activity className="w-5 h-5 text-teal-600" />
                   <span className="font-semibold text-gray-800">
-                    {new Date(
-                      d.createdAt?.toDate?.() || d.createdAt
-                    ).toLocaleDateString()}
+                    {new Date(d.createdAt?.toDate?.() || d.createdAt).toLocaleDateString()}
                   </span>
                 </div>
                 <p className="text-sm text-gray-600 mb-2">
@@ -777,14 +286,12 @@ function OverviewSection({ appointments, diagnoses, navigate }: any) {
   );
 }
 
-/* ----------------- Appointments Section ----------------- */
+/* ---------------- Appointments Section ---------------- */
 function AppointmentsSection({ appointments, navigate }: any) {
   return (
     <div>
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">
-          All Appointments
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-800">All Appointments</h3>
         <button
           onClick={() => navigate("/patient/book-appointment")}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -808,9 +315,7 @@ function AppointmentsSection({ appointments, navigate }: any) {
                     {a.reason || "Consultation"}
                   </p>
                   <div className="flex items-center gap-4 text-sm text-gray-600">
-                    <span>
-                      {new Date(a.appointment_date).toLocaleDateString()}
-                    </span>
+                    <span>{new Date(a.appointment_date).toLocaleDateString()}</span>
                     <span>{a.appointment_time}</span>
                   </div>
                 </div>
@@ -839,7 +344,7 @@ function AppointmentsSection({ appointments, navigate }: any) {
   );
 }
 
-/* ----------------- Records Section ----------------- */
+/* ---------------- Records Section ---------------- */
 function RecordsSection({ medicalRecords }: any) {
   const { user } = useAuth();
   const [showUpload, setShowUpload] = useState(false);
@@ -858,10 +363,7 @@ function RecordsSection({ medicalRecords }: any) {
     setUploading(true);
     try {
       const storage = getStorage();
-      const storageRef = ref(
-        storage,
-        `records/${user?.uid}/${Date.now()}_${file.name}`
-      );
+      const storageRef = ref(storage, `records/${user?.uid}/${Date.now()}_${file.name}`);
       await uploadBytes(storageRef, file);
       const fileURL = await getDownloadURL(storageRef);
 
@@ -892,9 +394,7 @@ function RecordsSection({ medicalRecords }: any) {
     <div>
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-800">
-          Medical Records
-        </h3>
+        <h3 className="text-lg font-semibold text-gray-800">Medical Records</h3>
         <button
           onClick={() => setShowUpload(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
@@ -921,9 +421,7 @@ function RecordsSection({ medicalRecords }: any) {
                   <div className="flex items-center gap-4 text-sm text-gray-600">
                     <span>{r.record_type}</span>
                     <span>
-                      {new Date(
-                        r.createdAt?.toDate?.() || r.createdAt
-                      ).toLocaleDateString()}
+                      {new Date(r.createdAt?.toDate?.() || r.createdAt).toLocaleDateString()}
                     </span>
                   </div>
                 </div>
@@ -955,9 +453,7 @@ function RecordsSection({ medicalRecords }: any) {
 
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Title
-                </label>
+                <label className="text-sm font-medium text-gray-700">Title</label>
                 <input
                   type="text"
                   value={title}
@@ -968,9 +464,7 @@ function RecordsSection({ medicalRecords }: any) {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Record Type
-                </label>
+                <label className="text-sm font-medium text-gray-700">Record Type</label>
                 <select
                   value={recordType}
                   onChange={(e) => setRecordType(e.target.value)}
@@ -986,9 +480,7 @@ function RecordsSection({ medicalRecords }: any) {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Description (optional)
-                </label>
+                <label className="text-sm font-medium text-gray-700">Description (optional)</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -999,9 +491,7 @@ function RecordsSection({ medicalRecords }: any) {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
-                  Upload File
-                </label>
+                <label className="text-sm font-medium text-gray-700">Upload File</label>
                 <input
                   type="file"
                   accept=".pdf,.png,.jpg,.jpeg"
