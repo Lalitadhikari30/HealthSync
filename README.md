@@ -2,7 +2,7 @@
 
 HealthSync is a comprehensive healthcare management platform that connects patients with doctors, provides AI-powered diagnostics, and manages medical records securely.
 
-![HealthSync Banner](https://via.placeholder.com/800x200?text=HealthSync+Platform)
+![HealthSync Banner](./HealthSync%20Image.png)
 
 ## 🌟 Features
 
