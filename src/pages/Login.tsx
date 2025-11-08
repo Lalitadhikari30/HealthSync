@@ -1,48 +1,51 @@
-import { useState } from 'react';
-import { Heart, LogIn, Loader } from 'lucide-react';
-import { supabase } from '../lib/supabase';
-import { useNavigate } from '../hooks/useNavigate';
+import { useState } from "react";
+import { Heart, LogIn, Loader } from "lucide-react";
+import { useNavigate } from "../hooks/useNavigate";
+import { signInWithEmailAndPassword } from "firebase/auth";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
 
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // 🔹 1. Sign in user using Firebase Auth
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
 
-      if (signInError) throw signInError;
+      // 🔹 2. Fetch user profile from Firestore
+      const docRef = doc(db, "profiles", user.uid);
+      const docSnap = await getDoc(docRef);
 
-      if (data.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('role')
-          .eq('id', data.user.id)
-          .maybeSingle();
+      if (!docSnap.exists()) {
+        throw new Error("User profile not found in Firestore.");
+      }
 
-        if (profile?.role === 'admin') {
-          navigate('/admin/dashboard');
-        } else if (profile?.role === 'doctor') {
-          navigate('/doctor/dashboard');
-        } else {
-          navigate('/patient/dashboard');
-        }
+      const profile = docSnap.data();
+
+      // 🔹 3. Redirect user based on their role
+      if (profile.role === "admin") {
+        navigate("/admin/dashboard");
+      } else if (profile.role === "doctor") {
+        navigate("/doctor/dashboard");
+      } else {
+        navigate("/patient/dashboard");
       }
     } catch (err: unknown) {
+      console.error(err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An error occurred');
+        setError("An unexpected error occurred.");
       }
     } finally {
       setLoading(false);
@@ -127,9 +130,9 @@ export default function Login() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Don't have an account?{' '}
+              Don&apos;t have an account?{" "}
               <button
-                onClick={() => navigate('/signup')}
+                onClick={() => navigate("/signup")}
                 className="text-blue-600 hover:text-blue-700 font-semibold"
               >
                 Sign Up
@@ -140,7 +143,7 @@ export default function Login() {
 
         <div className="text-center mt-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-gray-600 hover:text-gray-800"
           >
             ← Back to Home

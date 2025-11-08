@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import Landing from '../pages/Landing';
 import Login from '../pages/Login';
@@ -10,15 +10,8 @@ import DoctorDashboard from '../pages/doctor/Dashboard';
 import CompleteProfile from '../pages/doctor/CompleteProfile';
 import AdminDashboard from '../pages/admin/Dashboard';
 
-export default function Router() {
-  const [path, setPath] = useState(window.location.pathname);
+function ProtectedRoute({ children, allowedRoles = [] }: { children: React.ReactNode; allowedRoles?: string[] }) {
   const { user, profile, loading } = useAuth();
-
-  useEffect(() => {
-    const handlePopState = () => setPath(window.location.pathname);
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
 
   if (loading) {
     return (
@@ -31,22 +24,80 @@ export default function Router() {
     );
   }
 
-  if (!user) {
-    if (path === '/login') return <Login />;
-    if (path === '/signup') return <Signup />;
-    return <Landing />;
+  if (!user || !profile) {
+    return <Navigate to="/login" replace />;
   }
 
-  if (profile?.role === 'patient') {
-    if (path === '/patient/ai-diagnosis') return <AIDiagnosis />;
-    if (path === '/patient/book-appointment') return <BookAppointment />;
-    return <PatientDashboard />;
+  if (allowedRoles.length > 0 && !allowedRoles.includes(profile.role)) {
+    // If user has a role but it's not allowed, redirect to their dashboard
+    if (profile.role) {
+      return <Navigate to={`/${profile.role}/dashboard`} replace />;
+    }
+    // If no role, redirect to login
+    return <Navigate to="/login" replace />;
   }
 
-  if (profile?.role === 'doctor') {
-    if (path === '/doctor/complete-profile') return <CompleteProfile />;
-    return <DoctorDashboard />;
-  }
+  return <>{children}</>;
+}
+
+export default function Router() {
+  const { user, profile } = useAuth();
+
+  const getDefaultRoute = () => {
+    if (!user) return '/';
+    if (!profile?.role) return '/login'; // If no profile/role, send back to login
+    return `/${profile.role}/dashboard`;
+  };
+
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Public routes */}
+        <Route path="/" element={user && profile?.role ? (
+          <Navigate to={`/${profile.role}/dashboard`} replace />
+        ) : (
+          <Landing />
+        )} />
+        <Route path="/login" element={user && profile?.role ? (
+          <Navigate to={getDefaultRoute()} replace />
+        ) : (
+          <Login />
+        )} />
+        <Route path="/signup" element={user && profile?.role ? (
+          <Navigate to={getDefaultRoute()} replace />
+        ) : (
+          <Signup />
+        )} />
+
+        {/* Patient routes */}
+        <Route path="/patient/dashboard" element={
+          <ProtectedRoute allowedRoles={['patient']}><PatientDashboard /></ProtectedRoute>
+        } />
+        <Route path="/patient/ai-diagnosis" element={
+          <ProtectedRoute allowedRoles={['patient']}><AIDiagnosis /></ProtectedRoute>
+        } />
+        <Route path="/patient/book-appointment" element={
+          <ProtectedRoute allowedRoles={['patient']}><BookAppointment /></ProtectedRoute>
+        } />
+
+        {/* Doctor routes */}
+        <Route path="/doctor/dashboard" element={
+          <ProtectedRoute allowedRoles={['doctor']}><DoctorDashboard /></ProtectedRoute>
+        } />
+        <Route path="/doctor/complete-profile" element={
+          <ProtectedRoute allowedRoles={['doctor']}><CompleteProfile /></ProtectedRoute>
+        } />
+
+        {/* Admin routes */}
+        <Route path="/admin/dashboard" element={
+          <ProtectedRoute allowedRoles={['admin']}><AdminDashboard /></ProtectedRoute>
+        } />
+
+        {/* Fallback route for undefined roles */}
+        <Route path="*" element={<Navigate to={getDefaultRoute()} replace />} />
+      </Routes>
+    </BrowserRouter>
+  );
 
   if (profile?.role === 'admin') {
     return <AdminDashboard />;
