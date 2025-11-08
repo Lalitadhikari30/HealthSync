@@ -1,66 +1,62 @@
-import { useState, useEffect } from 'react';
-import { Heart, UserPlus, Loader, Stethoscope, Users } from 'lucide-react';
-import { supabase, UserRole } from '../lib/supabase';
-import { useNavigate } from '../hooks/useNavigate';
+import { useState, useEffect } from "react";
+import { Heart, UserPlus, Loader, Stethoscope, Users } from "lucide-react";
+import { useNavigate } from "../hooks/useNavigate";
+import { createUserWithEmailAndPassword } from "firebase/auth";
+import { doc, setDoc } from "firebase/firestore";
+import { auth, db } from "../lib/firebase";
+
+type UserRole = "patient" | "doctor" | "admin";
 
 export default function Signup() {
-  const [role, setRole] = useState<UserRole>('patient');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [role, setRole] = useState<UserRole>("patient");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const roleParam = params.get('role') as UserRole;
-    if (roleParam && ['admin', 'doctor', 'patient'].includes(roleParam)) {
+    const roleParam = params.get("role") as UserRole;
+    if (roleParam && ["admin", "doctor", "patient"].includes(roleParam)) {
       setRole(roleParam);
     }
   }, []);
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const { data, error: signUpError } = await supabase.auth.signUp({
+      // 🔹 1. Create user in Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // 🔹 2. Save user profile in Firestore
+      await setDoc(doc(db, "profiles", user.uid), {
+        id: user.uid,
         email,
-        password,
+        full_name: fullName,
+        role,
+        createdAt: new Date(),
       });
 
-      if (signUpError) throw signUpError;
-
-      if (data.user) {
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email,
-            full_name: fullName,
-            role,
-          });
-
-        if (profileError) throw profileError;
-
-        if (role === 'patient') {
-          await supabase.from('patients').insert({
-            user_id: data.user.id,
-          });
-          navigate('/patient/dashboard');
-        } else if (role === 'doctor') {
-          navigate('/doctor/complete-profile');
-        } else {
-          navigate('/admin/dashboard');
-        }
+      // 🔹 3. Redirect based on role
+      if (role === "patient") {
+        navigate("/patient/dashboard");
+      } else if (role === "doctor") {
+        navigate("/doctor/complete-profile");
+      } else {
+        navigate("/admin/dashboard");
       }
     } catch (err: unknown) {
+      console.error(err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An error occurred');
+        setError("An unexpected error occurred.");
       }
     } finally {
       setLoading(false);
@@ -103,11 +99,11 @@ export default function Signup() {
               <div className="grid grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={() => setRole('patient')}
+                  onClick={() => setRole("patient")}
                   className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'patient'
-                      ? 'border-blue-600 bg-blue-50'
-                      : 'border-gray-300 hover:border-blue-300'
+                    role === "patient"
+                      ? "border-blue-600 bg-blue-50"
+                      : "border-gray-300 hover:border-blue-300"
                   }`}
                 >
                   <Heart className="w-6 h-6 mx-auto mb-1" />
@@ -115,11 +111,11 @@ export default function Signup() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('doctor')}
+                  onClick={() => setRole("doctor")}
                   className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'doctor'
-                      ? 'border-cyan-600 bg-cyan-50'
-                      : 'border-gray-300 hover:border-cyan-300'
+                    role === "doctor"
+                      ? "border-cyan-600 bg-cyan-50"
+                      : "border-gray-300 hover:border-cyan-300"
                   }`}
                 >
                   <Stethoscope className="w-6 h-6 mx-auto mb-1" />
@@ -127,11 +123,11 @@ export default function Signup() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setRole('admin')}
+                  onClick={() => setRole("admin")}
                   className={`p-3 rounded-lg border-2 transition-all ${
-                    role === 'admin'
-                      ? 'border-teal-600 bg-teal-50'
-                      : 'border-gray-300 hover:border-teal-300'
+                    role === "admin"
+                      ? "border-teal-600 bg-teal-50"
+                      : "border-gray-300 hover:border-teal-300"
                   }`}
                 >
                   <Users className="w-6 h-6 mx-auto mb-1" />
@@ -205,9 +201,9 @@ export default function Signup() {
 
           <div className="mt-6 text-center">
             <p className="text-gray-600">
-              Already have an account?{' '}
+              Already have an account?{" "}
               <button
-                onClick={() => navigate('/login')}
+                onClick={() => navigate("/login")}
                 className="text-blue-600 hover:text-blue-700 font-semibold"
               >
                 Sign In
@@ -218,7 +214,7 @@ export default function Signup() {
 
         <div className="text-center mt-6">
           <button
-            onClick={() => navigate('/')}
+            onClick={() => navigate("/")}
             className="text-gray-600 hover:text-gray-800"
           >
             ← Back to Home

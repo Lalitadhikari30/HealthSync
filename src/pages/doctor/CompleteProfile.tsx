@@ -1,61 +1,68 @@
-import { useState } from 'react';
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../lib/supabase';
-import { Stethoscope, Loader, ArrowRight } from 'lucide-react';
-import { useNavigate } from '../../hooks/useNavigate';
+import { useState } from "react";
+import { useAuth } from "../../contexts/AuthContext";
+import { db } from "../../lib/firebase";
+import { Stethoscope, Loader, ArrowRight } from "lucide-react";
+import { useNavigate } from "../../hooks/useNavigate";
+import { addDoc, collection } from "firebase/firestore";
 
 const SPECIALIZATIONS = [
-  'General Medicine',
-  'Cardiology',
-  'Dermatology',
-  'Pediatrics',
-  'Orthopedics',
-  'Neurology',
-  'Psychiatry',
-  'Gynecology',
-  'Ophthalmology',
-  'ENT',
-  'Dentistry',
-  'Other',
+  "General Medicine",
+  "Cardiology",
+  "Dermatology",
+  "Pediatrics",
+  "Orthopedics",
+  "Neurology",
+  "Psychiatry",
+  "Gynecology",
+  "Ophthalmology",
+  "ENT",
+  "Dentistry",
+  "Other",
 ];
 
 export default function CompleteProfile() {
-  const { profile } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    specialization: '',
-    licenseNumber: '',
-    experienceYears: '',
-    consultationFee: '',
-    bio: '',
+    specialization: "",
+    licenseNumber: "",
+    experienceYears: "",
+    consultationFee: "",
+    bio: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setLoading(true);
 
     try {
-      const { error: insertError } = await supabase.from('doctors').insert({
-        user_id: profile?.id,
+      if (!user) throw new Error("You must be logged in to complete your profile.");
+
+      // 🔹 1. Add doctor record in Firestore
+      await addDoc(collection(db, "doctors"), {
+        user_id: user.uid,
+        full_name: profile?.full_name || "",
+        email: profile?.email || user.email,
         specialization: formData.specialization,
         license_number: formData.licenseNumber,
-        experience_years: parseInt(formData.experienceYears),
-        consultation_fee: parseFloat(formData.consultationFee),
+        experience_years: Number(formData.experienceYears),
+        consultation_fee: Number(formData.consultationFee),
         bio: formData.bio,
-        status: 'active',
+        status: "active",
+        createdAt: new Date(),
       });
 
-      if (insertError) throw insertError;
-
-      navigate('/doctor/dashboard');
+      // 🔹 2. Navigate to doctor dashboard
+      navigate("/doctor/dashboard");
     } catch (err: unknown) {
+      console.error(err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('An error occurred');
+        setError("An unexpected error occurred");
       }
     } finally {
       setLoading(false);
@@ -65,6 +72,7 @@ export default function CompleteProfile() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-cyan-50 via-white to-teal-50 flex items-center justify-center p-6">
       <div className="w-full max-w-2xl">
+        {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-2 mb-4">
             <div className="bg-gradient-to-br from-cyan-600 to-teal-500 p-3 rounded-xl">
@@ -75,9 +83,12 @@ export default function CompleteProfile() {
             </span>
           </div>
           <h1 className="text-3xl font-bold text-gray-800 mb-2">Complete Your Profile</h1>
-          <p className="text-gray-600">Help patients find you by completing your professional details</p>
+          <p className="text-gray-600">
+            Help patients find you by completing your professional details
+          </p>
         </div>
 
+        {/* Form */}
         <div className="bg-white rounded-2xl shadow-xl p-8">
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
@@ -86,6 +97,7 @@ export default function CompleteProfile() {
               </div>
             )}
 
+            {/* Specialization */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Specialization
@@ -105,6 +117,7 @@ export default function CompleteProfile() {
               </select>
             </div>
 
+            {/* License Number */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Medical License Number
@@ -119,6 +132,7 @@ export default function CompleteProfile() {
               />
             </div>
 
+            {/* Experience & Fee */}
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -152,6 +166,7 @@ export default function CompleteProfile() {
               </div>
             </div>
 
+            {/* Bio */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Professional Bio
@@ -166,6 +181,7 @@ export default function CompleteProfile() {
               />
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
