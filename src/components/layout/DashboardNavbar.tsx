@@ -34,7 +34,7 @@ export default function DashboardNavbar() {
     { icon: Home, label: 'Dashboard', path: '/patient/dashboard' },
     { icon: Calendar, label: 'Appointments', path: '/patient/book-appointment' },
     { icon: Stethoscope, label: 'AI Diagnosis', path: '/patient/ai-diagnosis' },
-    { icon: FileText, label: 'Records', path: '/patient/dashboard' },
+    { icon: FileText, label: 'Medical Records', path: '/patient/medical-records' },
   ];
 
   // Close dropdowns when clicking outside
@@ -320,7 +320,7 @@ export default function DashboardNavbar() {
         </div>
       </nav>
 
-      <style jsx>{`
+      <style>{`
         @keyframes fadeIn {
           from {
             opacity: 0;
