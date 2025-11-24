@@ -34,34 +34,49 @@ HealthSync is a comprehensive healthcare management platform that connects patie
 
 | Layer               | Technology                               | Role                                           |
 | ------------------- | ---------------------------------------- | ---------------------------------------------- |
-| **Frontend**        | React (Vite + TypeScript)                | All UI, routing, form handling                 |
-|                     | Tailwind CSS                             | Styling                                        |
-|                     | Lucide Icons                             | Consistent icons                               |
-|                     | Axios                                    | Talk to Spring Boot backend                    |
-| **Backend**         | Spring Boot (Java 17+)                   | Core logic, processing, integrations           |
-|                     | Spring Web / MVC                         | REST APIs for complex logic                    |
-|                     | Spring Security (optional)               | Token validation for Firebase Auth             |
-|                     | Firebase Admin SDK                       | Securely communicate with Firebase DB and Auth |
-| **Database & Auth** | Firebase (Firestore + Auth)              | Data storage & authentication                  |
-| **Integrations**    | Google Cloud / OpenAI / Gemini           | AI diagnosis, file storage                     |
-| **DevOps**          | Docker, GitHub Actions, Railway / Render | CI/CD + Deployment                             |
+| **Frontend**        | React 18.3.1 + TypeScript 5.5.3          | UI components, routing, state management        |
+|                     | Vite 7.2.2                               | Build tool & development server                |
+|                     | Tailwind CSS 3.4.1 + PostCSS 8.4.35      | Utility-first CSS framework                    |
+|                     | Lucide React 0.344.0                     | Icon library                                   |
+|                     | React Router DOM 7.9.5                   | Client-side routing                            |
+|                     | React Hot Toast 2.6.0                    | Notification system                            |
+| **Backend**         | Spring Boot 3.1.5 + Java 17              | Core application framework                     |
+|                     | Spring Security + JWT (JJWT 0.11.5)      | Authentication & authorization                 |
+|                     | Spring Web MVC                           | REST API endpoints                             |
+|                     | Spring Boot Starter Mail                 | Email services                                 |
+|                     | Spring Boot Starter Validation           | Input validation                               |
+|                     | SpringDoc OpenAPI 2.2.0                  | API documentation (Swagger UI)                 |
+|                     | Lombok                                    | Code generation & boilerplate reduction        |
+| **Database & Auth** | Firebase 12.5.0 + Firebase Admin 9.2.0   | Authentication & real-time database            |
+|                     | Supabase JS 2.81.0                       | Alternative database/backend service           |
+| **AI Services**     | Google Generative AI 0.24.1              | AI-powered diagnostics (Gemini)                |
+|                     | OpenAI 6.8.1                             | AI chatbot & analysis features                 |
+| **Cloud Functions** | Firebase Functions 6.6.0 + Node.js 22    | Serverless backend functions                   |
+|                     | Firebase Admin 12.6.0                    | Firebase backend administration                |
+|                     | JSON Web Tokens 9.0.2                    | Token handling in cloud functions             |
+| **Development**     | ESLint 9.9.1 + TypeScript ESLint 8.3.0    | Code linting & quality assurance               |
+|                     | TypeScript 5.7.3 (Functions)            | Type safety for cloud functions                |
+|                     | Maven                                    | Dependency management & build tool             |
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ and npm
-- Java 17+
-- Docker (optional)
+- Node.js 22+ (for Firebase Functions)
+- npm or yarn package manager
+- Java 17+ (for Spring Boot backend)
+- Maven 3.6+
 - Firebase account and project
-- Google Cloud account (for AI features)
+- Google Cloud API keys (for Gemini AI)
+- OpenAI API key (for AI features)
+- Supabase account (optional, for alternative database)
 
 ### Frontend Setup
 
 1. Clone the repository:
    ```bash
    git clone https://github.com/Lalitadhikari30/HealthSync.git
-   cd HealthSync/project
+   cd HealthSync
    ```
 
 2. Install dependencies:
@@ -71,13 +86,30 @@ HealthSync is a comprehensive healthcare management platform that connects patie
 
 3. Set up environment variables:
    ```bash
-   cp .env.example .env
-   # Edit .env with your Firebase and backend configurations
+   cp frontend/.env.example frontend/.env
+   # Edit frontend/.env with your Firebase and API configurations
    ```
 
 4. Start development server:
    ```bash
    npm run dev
+   ```
+
+### Firebase Functions Setup
+
+1. Navigate to functions directory:
+   ```bash
+   cd functions
+   ```
+
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Deploy functions:
+   ```bash
+   firebase deploy --only functions
    ```
 
 ### Backend Setup
@@ -110,30 +142,51 @@ HealthSync is a comprehensive healthcare management platform that connects patie
 ### Project Structure
 
 ```
-project/
-├── frontend/
+HealthSync/
+├── frontend/                        # React TypeScript frontend
 │   ├── src/
-│   │   ├── components/    # Reusable UI components
-│   │   ├── contexts/      # React contexts (auth, etc.)
-│   │   ├── hooks/         # Custom React hooks
-│   │   ├── lib/          # Utility functions & configs
-│   │   └── pages/        # Page components
-│   └── public/           # Static assets
-│
-├── backend/
+│   │   ├── components/              # Reusable UI components
+│   │   │   ├── medical/            # Medical-related components
+│   │   │   ├── patient/            # Patient-specific components
+│   │   │   └── layout/             # Layout components
+│   │   ├── contexts/               # React contexts (auth, etc.)
+│   │   ├── hooks/                  # Custom React hooks
+│   │   ├── lib/                    # Utility functions & configs
+│   │   │   ├── firebase.ts         # Firebase configuration
+│   │   │   ├── supabase.ts         # Supabase configuration
+│   │   │   ├── storage.ts          # File storage utilities
+│   │   │   └── api.ts              # API utilities
+│   │   ├── pages/                  # Page components
+│   │   │   └── patient/            # Patient-specific pages
+│   │   └── main.tsx                # App entry point
+│   ├── functions/                   # Firebase cloud functions
+│   │   ├── src/
+│   │   │   ├── index.ts            # Main functions file
+│   │   │   └── supabaseToken.ts    # Supabase token handler
+│   │   └── package.json
+│   ├── package.json
+│   ├── vite.config.ts
+│   └── tailwind.config.js
+
+├── backend/                         # Spring Boot Java backend
 │   ├── src/
-│   │   ├── main/
-│   │   │   ├── java/
-│   │   │   │   └── com/healthsync/
-│   │   │   │       ├── config/      # Configurations
-│   │   │   │       ├── controller/  # REST endpoints
-│   │   │   │       ├── service/     # Business logic
-│   │   │   │       └── model/       # Data models
-│   │   │   └── resources/
-│   │   └── test/                    # Unit tests
+│   │   └── main/
+│   │       ├── java/
+│   │       │   └── com/healthsync/
+│   │       │       ├── config/      # Security & app configurations
+│   │       │       ├── controller/  # REST endpoints
+│   │       │       ├── entity/      # Data entities
+│   │       │       ├── repository/  # Data repositories
+│   │       │       ├── security/    # JWT & authentication
+│   │       │       └── service/     # Business logic
+│   │       └── resources/
+│   │           └── application.properties
 │   └── pom.xml
-│
-└── docker/                          # Docker configurations
+
+├── firebase.json                    # Firebase configuration
+├── .firebaserc                      # Firebase project settings
+├── package.json                     # Root package.json
+└── README.md
 ```
 
 ### Development Guidelines
@@ -210,11 +263,22 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- [React](https://reactjs.org/)
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [Firebase](https://firebase.google.com/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Lucide Icons](https://lucide.dev/)
+- [React](https://reactjs.org/) - Frontend framework
+- [TypeScript](https://www.typescriptlang.org/) - Type safety
+- [Vite](https://vitejs.dev/) - Build tool & dev server
+- [Tailwind CSS](https://tailwindcss.com/) - CSS framework
+- [Lucide Icons](https://lucide.dev/) - Icon library
+- [Spring Boot](https://spring.io/projects/spring-boot) - Backend framework
+- [Java](https://www.oracle.com/java/) - Programming language
+- [Maven](https://maven.apache.org/) - Dependency management
+- [Firebase](https://firebase.google.com/) - Authentication & database
+- [Google Generative AI](https://ai.google.dev/) - AI diagnostics
+- [OpenAI](https://openai.com/) - AI chatbot & analysis
+- [Supabase](https://supabase.com/) - Alternative database service
+- [JWT](https://jwt.io/) - Authentication tokens
+- [ESLint](https://eslint.org/) - Code linting
+- [PostCSS](https://postcss.org/) - CSS processing
+- [Lombok](https://projectlombok.org/) - Java boilerplate reduction
 
 ## 📞 Support
 
