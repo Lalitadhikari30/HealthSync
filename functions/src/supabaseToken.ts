@@ -15,7 +15,10 @@ const SUPABASE_URL = 'https://qbfphvazmbtqfwxiuqar.supabase.co';
  * Callable function to get a Supabase JWT token
  * This is the preferred method as it handles CORS automatically
  */
-export const getSupabaseToken = onCall({ region: 'us-central1' }, async (request) => {
+export const getSupabaseToken = onCall({ 
+  region: 'us-central1',
+  cors: ['http://localhost:5173', 'http://localhost:5174', 'http://localhost:3000']
+}, async (request) => {
   if (!request.auth) {
     throw new HttpsError('unauthenticated', 'User must be authenticated');
   }
@@ -59,7 +62,7 @@ export const getSupabaseToken = onCall({ region: 'us-central1' }, async (request
  */
 export const getSupabaseTokenHttp = onRequest({ region: 'us-central1' }, async (req, res) => {
   // Set CORS headers
-  const allowOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
+  const allowOrigin = process.env.CORS_ORIGIN || 'http://localhost:5174';
   res.setHeader('Access-Control-Allow-Origin', allowOrigin);
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Authorization, Content-Type');

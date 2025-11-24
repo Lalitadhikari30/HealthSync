@@ -22,3 +22,22 @@ dist-ssr
 *.sw?
 *.env
 firebase-credentials.json
+
+# Firebase Service Account (contains private keys)
+firebase-service-account.json
+backend/src/main/resources/firebase-service-account.json
+
+# Java/Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+*.iml
+.mvn/
+mvnw
+mvnw.cmd
+
+# Spring Boot
+application-dev.properties
+application-prod.properties

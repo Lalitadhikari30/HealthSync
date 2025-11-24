@@ -1,60 +1,31 @@
 package com.healthsync.repository;
 
-import com.google.api.core.ApiFuture;
-import com.google.cloud.firestore.*;
 import com.healthsync.entity.Patient;
-import com.google.firebase.cloud.FirestoreClient;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
 
 @Repository
-public class PatientRepository {
-    private static final String COLLECTION_NAME = "patients";
+public interface PatientRepository extends JpaRepository<Patient, Long> {
     
-    private Firestore getFirestore() {
-        return FirestoreClient.getFirestore();
-    }
-
-    public Patient save(Patient patient) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = getFirestore().collection(COLLECTION_NAME).document();
-        patient.setId(docRef.getId());
-        ApiFuture<WriteResult> result = docRef.set(patient);
-        result.get();
-        return patient;
-    }
-
-    public Optional<Patient> findById(String id) throws ExecutionException, InterruptedException {
-        DocumentReference docRef = getFirestore().collection(COLLECTION_NAME).document(id);
-        ApiFuture<DocumentSnapshot> future = docRef.get();
-        DocumentSnapshot document = future.get();
-        if (document.exists()) {
-            return Optional.of(document.toObject(Patient.class));
-        }
-        return Optional.empty();
-    }
-
-    public List<Patient> findAll() throws ExecutionException, InterruptedException {
-        List<Patient> patients = new ArrayList<>();
-        ApiFuture<QuerySnapshot> future = getFirestore().collection(COLLECTION_NAME).get();
-        for (DocumentSnapshot document : future.get().getDocuments()) {
-            patients.add(document.toObject(Patient.class));
-        }
-        return patients;
-    }
-
-    public void deleteById(String id) throws ExecutionException, InterruptedException {
-        ApiFuture<WriteResult> writeResult = getFirestore().collection(COLLECTION_NAME).document(id).delete();
-        writeResult.get();
-    }
-
-    public Patient update(String id, Patient patient) throws ExecutionException, InterruptedException {
-        ApiFuture<WriteResult> writeResult = getFirestore().collection(COLLECTION_NAME).document(id).set(patient);
-        writeResult.get();
-        patient.setId(id);
-        return patient;
-    }
+    Optional<Patient> findByFirebaseUid(String firebaseUid);
+    
+    Optional<Patient> findByEmail(String email);
+    
+    boolean existsByEmail(String email);
+    
+    boolean existsByFirebaseUid(String firebaseUid);
+    
+    @Query("SELECT p FROM Patient p WHERE p.name LIKE %:name%")
+    List<Patient> findByNameContaining(@Param("name") String name);
+    
+    @Query("SELECT p FROM Patient p WHERE p.bloodGroup = :bloodGroup")
+    List<Patient> findByBloodGroup(@Param("bloodGroup") String bloodGroup);
+    
+    @Query("SELECT p FROM Patient p WHERE p.gender = :gender")
+    List<Patient> findByGender(@Param("gender") String gender);
 }

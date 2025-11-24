@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "patients")
+@Table(name = "doctors")
 @Data
-public class Patient {
+public class Doctor {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -23,20 +23,21 @@ public class Patient {
     private String email;
     
     private String phone;
-    private String address;
-    private String dateOfBirth;
-    private String gender;
-    private String bloodGroup;
-    private String allergies;
-    private String emergencyContact;
+    private String specialization;
+    private String qualifications;
+    private String experience;
+    private String licenseNumber;
+    private String consultationFee;
+    private String availableDays;
+    private String availableTime;
     
     @Enumerated(EnumType.STRING)
-    private UserRole role = UserRole.PATIENT;
+    private UserRole role = UserRole.DOCTOR;
     
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
     private List<Appointment> appointments;
     
-    @OneToMany(mappedBy = "patient", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "doctor", cascade = CascadeType.ALL)
     private List<MedicalRecord> medicalRecords;
     
     @Column(updatable = false)
@@ -50,6 +51,6 @@ public class Patient {
     }
     
     public enum UserRole {
-        PATIENT, DOCTOR, ADMIN
+        DOCTOR, PATIENT, ADMIN
     }
 }

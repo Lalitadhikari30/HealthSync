@@ -1,7 +1,5 @@
 server:
   port: 8080
-  servlet:
-    context-path: /api
   compression:
     enabled: true
     mime-types: application/json,application/xml,text/html,text/xml,text/plain,application/javascript
@@ -10,41 +8,36 @@ spring:
   application:
     name: healthsync-backend
   
-  # Firebase Admin SDK Configuration
-  autoconfigure:
-    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  # Database Configuration
+  datasource:
+    url: jdbc:h2:mem:healthsync
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: password
   
-  # Mail Configuration
-  mail:
-    host: ${MAIL_HOST:smtp.gmail.com}
-    port: 587
-    username: ${MAIL_USERNAME:}
-    password: ${MAIL_PASSWORD:}
+  h2:
+    console:
+      enabled: false
+  
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: true
     properties:
-      mail:
-        smtp:
-          auth: true
-          starttls:
-            enable: true
-        debug: true
-
-# Firebase Configuration
-firebase:
-  database-url: ${FIREBASE_DATABASE_URL:https://your-project-id.firebaseio.com}
-  project-id: healthsync-7abff
-  credentials:
-    location: classpath:firebase-credentials.json
-
-# JWT Configuration
-jwt:
-  secret: ${JWT_SECRET:healthsync-secret-key-change-this-in-production}
-  expiration: 86400000  # 24 hours in milliseconds
-  issuer: HealthSync
+      hibernate:
+        format_sql: true
+    database-platform: org.hibernate.dialect.H2Dialect
+  
+  # JWT Configuration
+  jwt:
+    secret: ${JWT_SECRET:healthsync-secret-key-change-this-in-production}
+    expiration: 86400000  # 24 hours in milliseconds
+    issuer: HealthSync
 
 # Application Properties
 app:
   cors:
-    allowed-origins: http://localhost:5173,http://localhost:3000
+    allowed-origins: http://localhost:3000,http://localhost:8080
     allowed-methods: GET,POST,PUT,DELETE,OPTIONS
     allowed-headers: '*'
     max-age: 3600
@@ -60,7 +53,17 @@ logging:
     root: INFO
     org.springframework: INFO
     com.healthsync: DEBUG
-    com.google.firebase: INFO
+
+# Spring Boot Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env,beans,mappings
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: always
 
 # OpenAPI Configuration
 springdoc:

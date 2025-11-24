@@ -3,37 +3,42 @@ package com.healthsync.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.cloud.FirestoreClient;
+import com.google.cloud.firestore.Firestore;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.io.InputStream;
-import org.springframework.beans.factory.annotation.Value;
-import jakarta.annotation.PostConstruct;
 
 @Configuration
 public class FirebaseConfig {
 
-    @Value("${firebase.credentials.location}")
-    private String credentialsPath;
-
-    @Value("${firebase.project-id}")
-    private String projectId;
-
     @PostConstruct
-    public void initialize() throws IOException {
-        String path = credentialsPath.startsWith("classpath:")
-                ? credentialsPath.substring("classpath:".length())
-                : credentialsPath;
-        InputStream serviceAccount = new ClassPathResource(path).getInputStream();
-        
-        FirebaseOptions options = FirebaseOptions.builder()
-            .setCredentials(GoogleCredentials.fromStream(serviceAccount))
-            .setProjectId(projectId)
-            .build();
+    public void initializeFirebase() {
+        try {
+            // Try to load service account key from resources
+            InputStream serviceAccount = new ClassPathResource("firebase-service-account.json").getInputStream();
+            
+            FirebaseOptions options = FirebaseOptions.builder()
+                    .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+                    .setProjectId("healthsync-7abff") // Your Firebase project ID
+                    .build();
 
-        if (FirebaseApp.getApps().isEmpty()) {
-            FirebaseApp.initializeApp(options);
+            if (FirebaseApp.getApps().isEmpty()) {
+                FirebaseApp.initializeApp(options);
+                System.out.println("✅ Firebase initialized successfully!");
+            }
+        } catch (IOException e) {
+            System.out.println("⚠️ Firebase initialization failed: " + e.getMessage());
+            System.out.println("📝 Make sure to add firebase-service-account.json to src/main/resources");
         }
+    }
+
+    @Bean
+    public Firestore firestore() {
+        return FirestoreClient.getFirestore();
     }
 }
