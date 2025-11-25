@@ -33,22 +33,22 @@ HealthSync is a comprehensive healthcare management platform that seamlessly con
 ### **Real-time Data Flow Architecture**
 
 ```
-┌─────────────────┐    HTTP/REST API    ┌─────────────────┐    Firebase SDK    ┌─────────────────┐
-│   React App     │ ◄──────────────────► │  Spring Boot    │ ◄────────────────► │ Firebase Firestore│
-│   (Port 5173)   │                    │   (Port 8080)   │                    │   (Real-time DB) │
-│                 │                    │                 │                    │                 │
-│ • TypeScript    │                    │ • Java 17       │                    │ • Patients       │
-│ • Firebase Auth │                    │ • Spring Security│                    │ • Doctors        │
-│ • Tailwind CSS  │                    │ • Firebase Admin│                    │ • Appointments   │
-│ • AI Services   │                    │ • REST APIs     │                    │ • Medical Recs   │
-└─────────────────┘                    └─────────────────┘                    └─────────────────┘
+┌─────────────────┐    HTTP/REST API    ┌──────────────────┐    Firebase SDK    ┌───────────────────┐
+│   React App     │ ◄──────────────────►│  Spring Boot     │ ◄────────────────► │ Firebase Firestore│
+│   (Port 5173)   │                     │  (Port 8080)     │                    │  (Real-time DB)   │
+│                 │                     │                  │                    │                   │
+│ • TypeScript    │                     │ • Java 17        │                    │ • Patients        │
+│ • Firebase Auth │                     │ • Spring Security│                    │ • Doctors         │
+│ • Tailwind CSS  │                     │ • Firebase Admin │                    │ • Appointments    │
+│ • AI Services   │                     │ • REST APIs      │                    │ • Medical Recs    │
+└─────────────────┘                     └──────────────────┘                    └───────────────────┘
 ```
 
 ### **Technology Stack**
 
 | Layer               | Technology                               | Role                                           |
 | ------------------- | ---------------------------------------- | ---------------------------------------------- |
-| **Frontend**        | React 18.3.1 + TypeScript 5.5.3          | UI components, routing, state management        |
+| **Frontend**        | React 18.3.1 + TypeScript 5.5.3          | UI components, routing, state management       |
 |                     | Vite 7.2.2                               | Build tool & development server                |
 |                     | Tailwind CSS 3.4.1 + PostCSS 8.4.35      | Utility-first CSS framework                    |
 |                     | Lucide React 0.344.0                     | Icon library                                   |
@@ -61,13 +61,13 @@ HealthSync is a comprehensive healthcare management platform that seamlessly con
 |                     | Firebase Admin SDK 9.2.0                 | Firebase integration & Firestore operations    |
 |                     | Spring Boot Starter Validation           | Input validation                               |
 |                     | SpringDoc OpenAPI 2.2.0                  | API documentation (Swagger UI)                 |
-|                     | Spring Boot Actuator                      | Health monitoring & metrics                   |
-|                     | Lombok                                    | Code generation & boilerplate reduction        |
-| **Database & Auth** | Firebase Firestore                       | Real-time NoSQL database (shared by both)       |
+|                     | Spring Boot Actuator                     | Health monitoring & metrics                   |
+|                     | Lombok                                   | Code generation & boilerplate reduction       |
+| **Database & Auth** | Firebase Firestore                       | Real-time NoSQL database (shared by both)      |
 |                     | Firebase Authentication                  | User authentication & JWT tokens               |
 | **AI Services**     | Google Generative AI 0.24.1              | AI-powered diagnostics (Gemini)                |
 |                     | OpenAI 6.8.1                             | AI chatbot & analysis features                 |
-| **Development**     | ESLint 9.9.1 + TypeScript ESLint 8.3.0    | Code linting & quality assurance               |
+| **Development**     | ESLint 9.9.1 + TypeScript ESLint 8.3.0   | Code linting & quality assurance              |
 |                     | Maven                                    | Dependency management & build tool             |
 
 ### **Key Architecture Features**
